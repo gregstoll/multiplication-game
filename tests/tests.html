@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Multiplication Game — Tests</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 2rem; color: #222; }
+  .pass { color: #1a7f37; } .fail { color: #c62828; font-weight: bold; }
+  #summary { font-size: 1.3rem; margin-bottom: 1rem; }
+  li { margin: 2px 0; }
+</style>
+</head>
+<body>
+<h1>Multiplication Game tests</h1>
+<div id="summary">Running…</div>
+<ul id="results"></ul>
+
+<script src="../js/config.js"></script>
+<script src="../js/questions.js"></script>
+<script src="../js/game.js"></script>
+<script>
+(function () {
+  var results = [], Q = MG.questions;
+
+  function test(name, fn) {
+    try { fn(); results.push({ name: name, ok: true }); }
+    catch (e) { results.push({ name: name, ok: false, msg: e.message }); }
+  }
+  function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
+  function eq(a, b, msg) { if (a !== b) throw new Error((msg || '') + ' expected ' + b + ', got ' + a); }
+
+  // ---- buildQuestions ----
+  test('{2, 8} gives 17 questions', function () { eq(Q.buildQuestions([2, 8]).length, 17); });
+  test('{5} gives 9 questions', function () { eq(Q.buildQuestions([5]).length, 9); });
+  test('{1..9} gives 45 questions', function () { eq(Q.buildQuestions([1,2,3,4,5,6,7,8,9]).length, 45); });
+  test('no duplicate pairs and all answers correct', function () {
+    for (var run = 0; run < 50; run++) {
+      var qs = Q.buildQuestions([1,2,3,4,5,6,7,8,9]), seen = {};
+      qs.forEach(function (q) {
+        var key = Math.min(q.a, q.b) + 'x' + Math.max(q.a, q.b);
+        assert(!seen[key], 'duplicate ' + key); seen[key] = true;
+        eq(q.answer, q.a * q.b, 'answer for ' + q.a + 'x' + q.b);
+        assert(q.a >= 1 && q.a <= 9 && q.b >= 1 && q.b <= 9, 'factor out of range');
+      });
+    }
+  });
+  test('every question includes a selected number', function () {
+    Q.buildQuestions([3, 7]).forEach(function (q) {
+      assert([3, 7].indexOf(q.a) !== -1 || [3, 7].indexOf(q.b) !== -1, q.a + 'x' + q.b);
+    });
+  });
+  test('order is randomised (both a×b and b×a appear across runs)', function () {
+    var bigFirst = 0, smallFirst = 0;
+    for (var i = 0; i < 200; i++) {
+      var q = Q.buildQuestions([8]).filter(function (q) { return q.key === '2x8'; })[0];
+      if (q.a === 8) bigFirst++; else smallFirst++;
+    }
+    assert(bigFirst > 20 && smallFirst > 20, bigFirst + ' / ' + smallFirst);
+  });
+
+  // ---- makeChoices ----
+  test('makeChoices: 4 unique positive choices with exactly one right answer', function () {
+    for (var a = 1; a <= 9; a++) for (var b = 1; b <= 9; b++) for (var r = 0; r < 30; r++) {
+      var c = Q.makeChoices(a, b, 4), seen = {}, right = 0;
+      eq(c.length, 4, a + 'x' + b + ' length');
+      c.forEach(function (v) {
+        assert(v > 0 && Number.isInteger(v), a + 'x' + b + ' bad value ' + v);
+        assert(!seen[v], a + 'x' + b + ' duplicate ' + v); seen[v] = true;
+        if (v === a * b) right++;
+      });
+      eq(right, 1, a + 'x' + b + ' right answers');
+    }
+  });
+
+  // ---- parseTyped ----
+  test('parseTyped strips non-digits', function () {
+    eq(Q.parseTyped(' 4 2 '), 42); eq(Q.parseTyped('42abc'), 42); eq(Q.parseTyped('4-2'), 42);
+    eq(Q.parseTyped('056'), 56);
+  });
+  test('parseTyped returns null with no digits', function () {
+    eq(Q.parseTyped(''), null); eq(Q.parseTyped('abc'), null); eq(Q.parseTyped('  '), null);
+  });
+
+  // ---- game flow ----
+  function playRound(g, missFn) {
+    var steps = 0, phases = [];
+    while (!g.isDone() && steps++ < 1000) {
+      var c = g.current();
+      phases.push(c.phase);
+      if (missFn(c)) g.submit(-1);
+      g.submit(c.q.answer);
+      g.advance();
+    }
+    return phases;
+  }
+
+  test('perfect round: no bonus, full score', function () {
+    var g = MG.game.create({ numbers: [3] });
+    var phases = playRound(g, function () { return false; });
+    eq(phases.length, 9); assert(phases.every(function (p) { return p === 'main'; }));
+    var s = g.summary(); eq(s.firstTryCorrect, 9); eq(s.total, 9); eq(s.stars, 3); eq(s.bestStreak, 9);
+    eq(s.missed.length, 0);
+  });
+
+  test('missed questions come back once in bonus round, score counts first tries only', function () {
+    var g = MG.game.create({ numbers: [4] });
+    var missedKeys = {};
+    var phases = playRound(g, function (c) {
+      // miss the first 3 questions in the main pass, and miss everything in the bonus round
+      if (c.phase === 'main' && c.position <= 3) { missedKeys[c.q.key] = true; return true; }
+      return c.phase === 'bonus';
+    });
+    eq(phases.filter(function (p) { return p === 'main'; }).length, 9);
+    eq(phases.filter(function (p) { return p === 'bonus'; }).length, 3, 'bonus count');
+    var s = g.summary(); eq(s.firstTryCorrect, 6); eq(s.missed.length, 3);
+    s.missed.forEach(function (q) { assert(missedKeys[q.key], 'unexpected missed ' + q.key); });
+  });
+
+  test('missing a question several times adds it to bonus only once', function () {
+    var g = MG.game.create({ numbers: [6] });
+    var first = true, bonus = 0;
+    while (!g.isDone()) {
+      var c = g.current();
+      if (c.phase === 'bonus') bonus++;
+      if (first) { g.submit(-1); g.submit(-2); g.submit(-3); first = false; }
+      g.submit(c.q.answer); g.advance();
+    }
+    eq(bonus, 1);
+  });
+
+  test('eliminated answers are tracked and reset', function () {
+    var g = MG.game.create({ numbers: [2] });
+    g.submit(-5); g.submit(-7); g.submit(-5);
+    eq(g.current().eliminated.length, 2);
+    g.submit(g.current().q.answer); g.advance();
+    eq(g.current().eliminated.length, 0);
+  });
+
+  test('streak resets on a miss and milestones are reported', function () {
+    var g = MG.game.create({ numbers: [5] }, { milestones: [3] });
+    var r;
+    for (var i = 0; i < 3; i++) { r = g.submit(g.current().q.answer); g.advance(); }
+    assert(r.milestone, 'milestone at 3'); eq(r.streak, 3);
+    r = g.submit(-1); eq(r.streak, 0); eq(r.lostStreak, 3);
+  });
+
+  test('star thresholds', function () {
+    var g = MG.game.create({ numbers: [1,2,3,4,5,6,7,8,9] }); // 45 questions
+    var n = 0;
+    playRound(g, function (c) { return c.phase === 'main' && n++ < 10; }); // 35/45 = 0.78
+    eq(g.summary().stars, 2);
+  });
+
+  // ---- report ----
+  var ul = document.getElementById('results'), failed = 0;
+  results.forEach(function (r) {
+    var li = document.createElement('li');
+    li.className = r.ok ? 'pass' : 'fail';
+    li.textContent = (r.ok ? '✓ ' : '✗ ') + r.name + (r.ok ? '' : ' — ' + r.msg);
+    ul.appendChild(li);
+    if (!r.ok) failed++;
+  });
+  var sum = document.getElementById('summary');
+  sum.textContent = failed ? failed + ' of ' + results.length + ' tests FAILED' : 'All ' + results.length + ' tests passed 🎉';
+  sum.className = failed ? 'fail' : 'pass';
+  window.TEST_RESULTS = { total: results.length, failed: failed };
+})();
+</script>
+</body>
+</html>

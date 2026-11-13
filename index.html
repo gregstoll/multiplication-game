@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#cdeafe">
+<title>Multiplication Buddies</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<main id="app">
+
+  <!-- ===================== SETUP ===================== -->
+  <section id="screen-setup" class="screen screen-setup" aria-labelledby="setup-title">
+    <header class="setup-header">
+      <h1 id="setup-title">Multiplication <span class="title-pop">Buddies</span></h1>
+      <p class="subtitle">Practice your times tables with a friend!</p>
+    </header>
+
+    <div class="panel">
+      <h2><span class="step">1</span> Pick your buddy!</h2>
+      <div class="char-picker" id="char-picker" role="radiogroup" aria-label="Buddy">
+        <!-- filled in by ui.js -->
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="step">2</span> Which numbers do you want to practice?</h2>
+      <div class="num-grid" id="num-grid" aria-label="Numbers">
+        <!-- 1–9 filled in by ui.js -->
+      </div>
+      <div class="num-shortcuts">
+        <button type="button" class="pill" id="num-all">Pick all</button>
+        <button type="button" class="pill" id="num-clear">Clear</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="step">3</span> How do you want to answer?</h2>
+      <div class="mode-picker" role="radiogroup" aria-label="Answer mode">
+        <button type="button" class="mode-btn" role="radio" data-mode="choice" aria-checked="false">
+          <span class="mode-icon" aria-hidden="true">👆</span>
+          <span class="mode-name">Tap the answer</span>
+          <span class="mode-desc">Pick from 4 answers</span>
+        </button>
+        <button type="button" class="mode-btn" role="radio" data-mode="typing" aria-checked="false">
+          <span class="mode-icon" aria-hidden="true">⌨️</span>
+          <span class="mode-name">Type the answer</span>
+          <span class="mode-desc">Use your keyboard</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="start-area">
+      <button type="button" id="start-btn" class="big-btn start-btn" disabled>Start!</button>
+      <p id="round-info" class="round-info" aria-live="polite">Pick at least one number to start.</p>
+    </div>
+  </section>
+
+  <!-- ===================== PLAY ===================== -->
+  <section id="screen-play" class="screen screen-play" hidden aria-label="Game">
+    <div class="topbar">
+      <div class="progress" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+      <span class="progress-label" id="progress-label">Question 1 of 9</span>
+      <button type="button" class="icon-btn keep-focus" id="mute-btn" aria-label="Sound on" title="Sound on/off">🔊</button>
+      <button type="button" class="icon-btn keep-focus" id="quit-btn" aria-label="Stop this round" title="Stop">✕</button>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="buddy-area">
+        <div class="bubble" id="bubble" aria-hidden="true"></div>
+        <div class="buddy" id="play-buddy"></div>
+      </div>
+
+      <div class="qa" id="qa">
+        <div class="question" id="question" aria-live="off"></div>
+
+        <div class="choices" id="choices" hidden></div>
+
+        <!-- novalidate: the pattern attribute is only a hint for number keypads on iPad/iPhone;
+             the game cleans up spaces etc. itself, so the browser mustn't block those answers. -->
+        <form class="answer-form" id="answer-form" autocomplete="off" novalidate hidden>
+          <input id="answer-input" class="answer-input" type="text" inputmode="numeric" pattern="[0-9]*"
+                 enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="off"
+                 spellcheck="false" aria-label="Your answer" maxlength="6">
+          <button type="submit" class="check-btn keep-focus" id="check-btn">Check ✓</button>
+        </form>
+
+        <div class="streak" id="streak" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <div class="banner" id="bonus-banner" hidden>
+      <div class="banner-card">
+        <div class="banner-emoji" aria-hidden="true">💪</div>
+        <div class="banner-title">Bonus practice!</div>
+        <div class="banner-text">Let's try the tricky ones one more time.</div>
+      </div>
+    </div>
+
+    <div class="banner" id="quit-panel" hidden role="dialog" aria-modal="true" aria-labelledby="quit-title">
+      <div class="banner-card">
+        <div class="banner-title" id="quit-title">Stop this round?</div>
+        <div class="banner-buttons">
+          <button type="button" class="big-btn secondary" id="quit-yes">Yes, stop</button>
+          <button type="button" class="big-btn" id="quit-no">Keep playing</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SUMMARY ===================== -->
+  <section id="screen-summary" class="screen screen-summary" hidden aria-labelledby="summary-title">
+    <div class="summary-card">
+      <div class="buddy summary-buddy" id="summary-buddy"></div>
+      <h1 id="summary-title">Round complete!</h1>
+      <div class="stars" id="stars" aria-hidden="true"></div>
+      <p class="score" id="score"></p>
+      <p class="best-streak" id="best-streak"></p>
+      <div class="practice" id="practice">
+        <h2 id="practice-title">Facts to practice</h2>
+        <div class="fact-chips" id="fact-chips"></div>
+      </div>
+      <div class="summary-buttons">
+        <button type="button" class="big-btn" id="again-btn">Play again</button>
+        <button type="button" class="big-btn secondary" id="settings-btn">Change settings</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="confetti-layer" id="confetti-layer" aria-hidden="true"></div>
+<div class="sr-only" id="announcer" aria-live="polite" aria-atomic="true"></div>
+
+<script src="js/config.js"></script>
+<script src="js/questions.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/sounds.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
