@@ -226,11 +226,10 @@ button:disabled { cursor: default; }
 .char-card.selected { border-color: var(--accent); background: var(--accent-soft); transform: scale(1.03); }
 .char-card.selected .char-name::after { content: " ✓"; color: var(--accent); }
 
-.num-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; }
+.num-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; max-width: 600px; margin: 0 auto; }
 .num-btn {
   position: relative;
-  aspect-ratio: 1 / 1;
-  min-height: 56px;
+  height: 64px;
   border: 3px solid #e3dcf7;
   border-radius: 18px;
   background: #fff;
@@ -272,8 +271,7 @@ button:disabled { cursor: default; }
 .round-info { margin: 12px 0 0; color: var(--ink-soft); font-weight: 700; }
 
 @media (max-width: 620px) {
-  .num-grid { grid-template-columns: repeat(3, 1fr); max-width: 330px; margin: 0 auto; gap: 10px; }
-  .num-btn { aspect-ratio: auto; height: 64px; }
+  .num-grid { grid-template-columns: repeat(4, 1fr); max-width: 360px; gap: 10px; }
   .panel { padding: 14px 12px 16px; }
 }
 @media (max-width: 380px) {

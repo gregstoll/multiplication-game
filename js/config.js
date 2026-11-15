@@ -15,6 +15,10 @@ MG.config = {
     rememberSettings: true  // remember the last character / numbers / mode / mute
   },
 
+  // Highest number to practice, and the highest multiplier.
+  // With 12, picking 7 asks 7 × 1 through 7 × 12, and the picker shows 1–12.
+  maxNumber: 12,
+
   // Streak counts that trigger a bigger celebration.
   streakMilestones: [3, 5, 10, 15, 20, 25, 30, 40, 50],
 

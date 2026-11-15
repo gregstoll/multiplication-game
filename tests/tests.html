@@ -21,6 +21,7 @@
 <script>
 (function () {
   var results = [], Q = MG.questions;
+  var ALL = [1,2,3,4,5,6,7,8,9,10,11,12];
 
   function test(name, fn) {
     try { fn(); results.push({ name: name, ok: true }); }
@@ -30,17 +31,21 @@
   function eq(a, b, msg) { if (a !== b) throw new Error((msg || '') + ' expected ' + b + ', got ' + a); }
 
   // ---- buildQuestions ----
-  test('{2, 8} gives 17 questions', function () { eq(Q.buildQuestions([2, 8]).length, 17); });
-  test('{5} gives 9 questions', function () { eq(Q.buildQuestions([5]).length, 9); });
-  test('{1..9} gives 45 questions', function () { eq(Q.buildQuestions([1,2,3,4,5,6,7,8,9]).length, 45); });
+  test('{2, 8} gives 23 questions', function () { eq(Q.buildQuestions([2, 8]).length, 23); });
+  test('{5} gives 12 questions (5 × 1 … 5 × 12)', function () { eq(Q.buildQuestions([5]).length, 12); });
+  test('{1..12} gives 78 questions', function () { eq(Q.buildQuestions(ALL).length, 78); });
+  test('{10, 11, 12} gives 33 questions', function () { eq(Q.buildQuestions([10, 11, 12]).length, 33); });
+  test('12 × 12 is included when 12 is picked', function () {
+    assert(Q.buildQuestions([12]).some(function (q) { return q.key === '12x12' && q.answer === 144; }));
+  });
   test('no duplicate pairs and all answers correct', function () {
     for (var run = 0; run < 50; run++) {
-      var qs = Q.buildQuestions([1,2,3,4,5,6,7,8,9]), seen = {};
+      var qs = Q.buildQuestions(ALL), seen = {};
       qs.forEach(function (q) {
         var key = Math.min(q.a, q.b) + 'x' + Math.max(q.a, q.b);
         assert(!seen[key], 'duplicate ' + key); seen[key] = true;
         eq(q.answer, q.a * q.b, 'answer for ' + q.a + 'x' + q.b);
-        assert(q.a >= 1 && q.a <= 9 && q.b >= 1 && q.b <= 9, 'factor out of range');
+        assert(q.a >= 1 && q.a <= 12 && q.b >= 1 && q.b <= 12, 'factor out of range');
       });
     }
   });
@@ -60,7 +65,7 @@
 
   // ---- makeChoices ----
   test('makeChoices: 4 unique positive choices with exactly one right answer', function () {
-    for (var a = 1; a <= 9; a++) for (var b = 1; b <= 9; b++) for (var r = 0; r < 30; r++) {
+    for (var a = 1; a <= 12; a++) for (var b = 1; b <= 12; b++) for (var r = 0; r < 30; r++) {
       var c = Q.makeChoices(a, b, 4), seen = {}, right = 0;
       eq(c.length, 4, a + 'x' + b + ' length');
       c.forEach(function (v) {
@@ -97,8 +102,8 @@
   test('perfect round: no bonus, full score', function () {
     var g = MG.game.create({ numbers: [3] });
     var phases = playRound(g, function () { return false; });
-    eq(phases.length, 9); assert(phases.every(function (p) { return p === 'main'; }));
-    var s = g.summary(); eq(s.firstTryCorrect, 9); eq(s.total, 9); eq(s.stars, 3); eq(s.bestStreak, 9);
+    eq(phases.length, 12); assert(phases.every(function (p) { return p === 'main'; }));
+    var s = g.summary(); eq(s.firstTryCorrect, 12); eq(s.total, 12); eq(s.stars, 3); eq(s.bestStreak, 12);
     eq(s.missed.length, 0);
   });
 
@@ -110,9 +115,9 @@
       if (c.phase === 'main' && c.position <= 3) { missedKeys[c.q.key] = true; return true; }
       return c.phase === 'bonus';
     });
-    eq(phases.filter(function (p) { return p === 'main'; }).length, 9);
+    eq(phases.filter(function (p) { return p === 'main'; }).length, 12);
     eq(phases.filter(function (p) { return p === 'bonus'; }).length, 3, 'bonus count');
-    var s = g.summary(); eq(s.firstTryCorrect, 6); eq(s.missed.length, 3);
+    var s = g.summary(); eq(s.firstTryCorrect, 9); eq(s.missed.length, 3);
     s.missed.forEach(function (q) { assert(missedKeys[q.key], 'unexpected missed ' + q.key); });
   });
 
@@ -145,9 +150,9 @@
   });
 
   test('star thresholds', function () {
-    var g = MG.game.create({ numbers: [1,2,3,4,5,6,7,8,9] }); // 45 questions
+    var g = MG.game.create({ numbers: ALL }); // 78 questions
     var n = 0;
-    playRound(g, function (c) { return c.phase === 'main' && n++ < 10; }); // 35/45 = 0.78
+    playRound(g, function (c) { return c.phase === 'main' && n++ < 17; }); // 61/78 = 0.78
     eq(g.summary().stars, 2);
   });
 

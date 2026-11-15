@@ -26,7 +26,7 @@
       const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
       if (!saved) return;
       if (C.KINDS.indexOf(saved.character) !== -1) settings.character = saved.character;
-      if (Array.isArray(saved.numbers)) settings.numbers = saved.numbers.filter((n) => n >= 1 && n <= 9);
+      if (Array.isArray(saved.numbers)) settings.numbers = saved.numbers.filter((n) => n >= 1 && n <= Q.maxNumber());
       if (saved.mode === 'choice' || saved.mode === 'typing') settings.mode = saved.mode;
       settings.muted = !!saved.muted;
     } catch (e) { /* storage unavailable (e.g. some browsers on file://) — that's fine */ }
@@ -105,7 +105,7 @@
     });
 
     const grid = $('num-grid');
-    for (let n = 1; n <= 9; n++) {
+    for (let n = 1; n <= Q.maxNumber(); n++) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'num-btn';
@@ -121,7 +121,7 @@
       });
       grid.appendChild(btn);
     }
-    $('num-all').addEventListener('click', () => { settings.numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]; S.tap(); updateSetup(); });
+    $('num-all').addEventListener('click', () => { settings.numbers = Array.from({ length: Q.maxNumber() }, (_, i) => i + 1); S.tap(); updateSetup(); });
     $('num-clear').addEventListener('click', () => { settings.numbers = []; S.tap(); updateSetup(); });
 
     document.querySelectorAll('.mode-btn').forEach((btn) => {

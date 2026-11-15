@@ -24,12 +24,15 @@ MG.questions = (function () {
    * Each pair of factors appears once (2×8 and 8×2 are the same question),
    * shown in a random order.
    */
+  function maxNumber() { return (window.MG.config && MG.config.maxNumber) || 12; }
+
   function buildQuestions(selected, rand) {
     rand = rand || Math.random;
+    var max = maxNumber();
     var seen = {};
     var list = [];
     selected.forEach(function (n) {
-      for (var k = 1; k <= 9; k++) {
+      for (var k = 1; k <= max; k++) {
         var lo = Math.min(n, k), hi = Math.max(n, k);
         var key = lo + 'x' + hi;
         if (seen[key]) continue;
@@ -54,6 +57,8 @@ MG.questions = (function () {
     rand = rand || Math.random;
     count = count || 4;
     var answer = a * b;
+    var max = maxNumber();
+    var limit = max * (max + 1);   // keep wrong answers within a believable range
     var pool = [
       a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b,
       answer + 1, answer - 1, answer + 2, answer - 2,
@@ -69,7 +74,7 @@ MG.questions = (function () {
     seen[answer] = true;
     var candidates = [];
     pool.forEach(function (v) {
-      if (v > 0 && v <= 100 && !seen[v]) { seen[v] = true; candidates.push(v); }
+      if (v > 0 && v <= limit && !seen[v]) { seen[v] = true; candidates.push(v); }
     });
 
     var wrong = shuffle(candidates, rand).slice(0, count - 1);
@@ -95,6 +100,7 @@ MG.questions = (function () {
   }
 
   return {
+    maxNumber: maxNumber,
     shuffle: shuffle,
     buildQuestions: buildQuestions,
     countQuestions: countQuestions,

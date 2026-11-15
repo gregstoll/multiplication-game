@@ -11,7 +11,7 @@ Open `index.html` in a browser. Opening it straight from disk works, and so does
 There's nothing to install or build.
 
 1. Pick a buddy.
-2. Pick the numbers to practice (1–9). Each number you pick adds that number × 1 through × 9.
+2. Pick the numbers to practice (1–12). Each number you pick adds that number × 1 through × 12.
    A pair only appears once, so with 2 and 8 picked, 2 × 8 is asked a single time.
 3. Choose **Tap the answer** (4 choices) or **Type the answer** (uses the device's own keyboard).
 
@@ -32,7 +32,7 @@ features: {
 }
 ```
 
-The same file has a few other settings: streak milestones, star thresholds, and how long the celebration lasts.
+The same file has a few other settings: the highest number (`maxNumber`, 12 by default), streak milestones, star thresholds, and how long the celebration lasts.
 
 ## Files
 
