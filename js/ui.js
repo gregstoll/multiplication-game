@@ -54,10 +54,17 @@
     el.classList.add(cls);
   }
 
+  // During a round, scroll so the play screen fills the window. If the page is embedded
+  // under a site header/navbar, this moves the header out of view.
+  function scrollToGame() {
+    const top = $('screen-play').getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, Math.max(0, Math.round(top)));
+  }
+
   function showScreen(name) {
     ['setup', 'play', 'summary'].forEach((s) => { $('screen-' + s).hidden = s !== name; });
     document.body.dataset.screen = name;
-    window.scrollTo(0, 0);
+    if (name === 'play') scrollToGame(); else window.scrollTo(0, 0);
   }
 
   let timers = [];
@@ -493,7 +500,7 @@
       const h = vv ? vv.height : window.innerHeight;
       document.documentElement.style.setProperty('--vvh', h + 'px');
       document.body.classList.toggle('compact', h < 560);
-      if (document.body.dataset.screen === 'play') window.scrollTo(0, 0);
+      if (document.body.dataset.screen === 'play') scrollToGame();
     }
     if (vv) vv.addEventListener('resize', update);
     window.addEventListener('resize', update);

@@ -35,6 +35,9 @@ html {
     var(--bg-bottom);
 }
 body {
+  /* Transparent so the background on <html> shows through, even when a site
+     stylesheet such as Bootstrap gives <body> a white background. */
+  background: transparent;
   font-family: var(--font);
   color: var(--ink);
   min-height: 100vh;
