@@ -604,3 +604,18 @@ body.compact .streak { min-height: 1.8em; font-size: 1rem; }
     transition-duration: .01ms !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Footer link (setup screen)
+   -------------------------------------------------------------------------- */
+.site-footer { text-align: center; margin-top: 22px; font-size: .9rem; }
+.site-footer a {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+.site-footer a:hover { color: var(--accent-dark); text-decoration: underline; }
+.gh-icon { flex: none; }
