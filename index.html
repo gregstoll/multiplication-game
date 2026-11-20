@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#cdeafe">
 <!--#include virtual="/bootstraphead.html"-->
 <title>Multiplication Buddies</title>
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/styles.css?v=2">
 </head>
 <body>
 <!--#include virtual="/navbar.html"-->
@@ -146,11 +146,12 @@
 </div>
 
 
-<script src="js/config.js"></script>
-<script src="js/questions.js"></script>
-<script src="js/characters.js"></script>
-<script src="js/sounds.js"></script>
-<script src="js/game.js"></script>
-<script src="js/ui.js"></script>
+<!-- ?v=N: bump N in this file whenever the CSS or JS changes, so caches (e.g. Cloudflare) fetch the new files. -->
+<script src="js/config.js?v=2"></script>
+<script src="js/questions.js?v=2"></script>
+<script src="js/characters.js?v=2"></script>
+<script src="js/sounds.js?v=2"></script>
+<script src="js/game.js?v=2"></script>
+<script src="js/ui.js?v=2"></script>
 </body>
 </html>
