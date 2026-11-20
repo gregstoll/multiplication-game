@@ -38,6 +38,7 @@ body {
   /* Transparent so the background on <html> shows through, even when a site
      stylesheet such as Bootstrap gives <body> a white background. */
   background: transparent;
+  line-height: normal;   /* Bootstrap sets 1.5, which makes text and buttons taller */
   font-family: var(--font);
   color: var(--ink);
   min-height: 100vh;
@@ -54,7 +55,10 @@ button {
   -webkit-user-select: none;
   user-select: none;
 }
-button:disabled { cursor: default; }
+button:disabled, .big-btn:disabled { cursor: default; }
+/* Bootstrap gives headings line-height 1.2 and weight 500; keep the game's own look. */
+/* :where() keeps this rule weak, so the game's own heading styles below still win. */
+:where(#app) :is(h1, h2) { line-height: normal; font-weight: bold; }
 :focus-visible { outline: 4px solid var(--accent); outline-offset: 3px; }
 
 .sr-only {
@@ -297,6 +301,9 @@ button:disabled { cursor: default; }
 
 .topbar { display: flex; align-items: center; gap: 10px; }
 .progress {
+  display: block;        /* Bootstrap has its own .progress class (flex, small font) */
+  font-size: inherit;
+  line-height: inherit;
   flex: 1;
   height: 16px;
   border-radius: 999px;
