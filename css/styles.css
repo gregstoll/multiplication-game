@@ -137,11 +137,12 @@ button:disabled, .big-btn:disabled { cursor: default; }
 .buddy .sparkles path { transform-box: fill-box; transform-origin: center; }
 .buddy.mood-happy .sparkles path,
 .buddy.mood-party .sparkles path { animation: twinkle .9s ease-out both; }
-.buddy .sparkles path:nth-child(2) { animation-delay: .08s; }
-.buddy .sparkles path:nth-child(3) { animation-delay: .16s; }
-.buddy .sparkles path:nth-child(4) { animation-delay: .05s; }
-.buddy .sparkles path:nth-child(5) { animation-delay: .2s; }
-.buddy .sparkles path:nth-child(6) { animation-delay: .12s; }
+/* Each sparkle path sits inside its own <g>, so count the <g>s, not the paths. */
+.buddy .sparkles g:nth-child(2) path { animation-delay: .08s; }
+.buddy .sparkles g:nth-child(3) path { animation-delay: .16s; }
+.buddy .sparkles g:nth-child(4) path { animation-delay: .05s; }
+.buddy .sparkles g:nth-child(5) path { animation-delay: .2s; }
+.buddy .sparkles g:nth-child(6) path { animation-delay: .12s; }
 
 @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
 @keyframes idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }

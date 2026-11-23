@@ -68,8 +68,23 @@
   }
 
   let timers = [];
+  let heldStep = null;   // a game step that came due while the "Stop this round?" panel was open
   function later(fn, ms) { const t = setTimeout(fn, ms); timers.push(t); return t; }
-  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; heldStep = null; }
+
+  // Like later(), but for steps that move the game on (next question, bonus round, summary).
+  // If the quit panel is open when the step comes due, it waits until "Keep playing".
+  function laterStep(fn, ms) {
+    return later(function run() {
+      if (paused) { heldStep = run; return; }
+      fn();
+    }, ms);
+  }
+  function resumeHeldStep() {
+    const fn = heldStep;
+    heldStep = null;
+    if (fn) fn();
+  }
 
   function confetti(count) {
     if (!F.confetti || reducedMotion) return;
@@ -136,6 +151,35 @@
     });
 
     $('start-btn').addEventListener('click', startRound);
+
+    setupRadioGroup($('char-picker'), '.char-card');
+    setupRadioGroup(document.querySelector('.mode-picker'), '.mode-btn');
+  }
+
+  // Standard radio-group keyboard behaviour: Tab enters the group once, and the
+  // arrow keys (plus Home/End) move between options and select them.
+  function setupRadioGroup(group, selector) {
+    group.addEventListener('keydown', (e) => {
+      const items = Array.from(group.querySelectorAll(selector));
+      const i = items.indexOf(document.activeElement);
+      if (i === -1) return;
+      let j;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') j = (i + 1) % items.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') j = (i - 1 + items.length) % items.length;
+      else if (e.key === 'Home') j = 0;
+      else if (e.key === 'End') j = items.length - 1;
+      else return;
+      e.preventDefault();
+      items[j].focus();
+      items[j].click();
+    });
+  }
+
+  // Only the selected option (or the first, if none) is reachable with Tab.
+  function updateRovingTabindex(selector) {
+    const items = Array.from(document.querySelectorAll(selector));
+    const sel = items.find((b) => b.classList.contains('selected')) || items[0];
+    items.forEach((b) => { b.tabIndex = b === sel ? 0 : -1; });
   }
 
   function updateSetup() {
@@ -154,6 +198,8 @@
       b.classList.toggle('selected', on);
       b.setAttribute('aria-checked', on ? 'true' : 'false');
     });
+    updateRovingTabindex('.char-card');
+    updateRovingTabindex('.mode-btn');
 
     const missing = [];
     if (!settings.character) missing.push('a buddy');
@@ -301,7 +347,7 @@
     updateStreak(r.streak, milestone);
     announce('Correct! ' + q.a + ' times ' + q.b + ' is ' + q.answer + '.');
 
-    later(next, cfg.happyDelayMs + (milestone ? 600 : 0));
+    laterStep(next, cfg.happyDelayMs + (milestone ? 600 : 0));
   }
 
   function onWrong(r, btn) {
@@ -335,7 +381,7 @@
       C.setMood(buddyEl(), 'happy');
       S.start();
       announce("Bonus practice! Let's try the tricky ones one more time.");
-      later(() => { $('bonus-banner').hidden = true; renderQuestion(); }, 2200);
+      laterStep(() => { $('bonus-banner').hidden = true; renderQuestion(); }, 2200);
     } else {
       showSummary();
     }
@@ -408,6 +454,7 @@
       paused = false;
       $('quit-panel').hidden = true;
       refocusTyping();
+      resumeHeldStep();
     });
     $('quit-yes').addEventListener('click', () => {
       clearTimers();
@@ -420,6 +467,8 @@
     // Desktop shortcut: keys 1–4 pick an answer in multiple-choice mode.
     document.addEventListener('keydown', (e) => {
       if ($('screen-play').hidden || typing() || busy || paused) return;
+      // Leave browser shortcuts alone (e.g. Ctrl/Cmd+1 switches tabs).
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.key === 'Escape') return;
       const i = Number(e.key) - 1;
       const btns = document.querySelectorAll('.choice-btn');
@@ -511,6 +560,7 @@
   // Start up
   // ------------------------------------------------------------------
   loadSettings();
+  S.setMuted(settings.muted);   // apply a saved mute right away, not only once a round starts
   buildSetup();
   buildPlay();
   buildSummary();
